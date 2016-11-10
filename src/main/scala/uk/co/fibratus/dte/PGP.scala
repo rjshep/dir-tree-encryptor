@@ -12,6 +12,7 @@ import org.bouncycastle.openpgp.{PGPCompressedData, PGPOnePassSignatureList, _}
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
+import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -66,7 +67,7 @@ object PGP {
       val context = Context(pubKeyRingList, plainFact, clearStream, None)
 
       processMessage(context)
-      Success()
+      Success(Unit)
     }
     catch {
       case t: Throwable => Failure(t)
@@ -117,7 +118,8 @@ object PGP {
       case x: PGPOnePassSignatureList =>
         processMessage(processOPS(context, x.get(0)))
       case x: PGPLiteralData =>
-        transformStream(context, x.getInputStream())
+        val is = x.getInputStream
+        transformStream(context, is)
         processMessage(context)
       case x: PGPSignatureList =>
         context.onePassSignature.foreach(y => verifySignature(x.get(0), y))
