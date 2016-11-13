@@ -44,7 +44,7 @@ class CompareTest extends FunSuite with MockitoSugar {
       ))
     ))
 
-    assert(Compare.compare(src, dest) === CompareResult(Set.empty, Set.empty, Set.empty))
+    assert(Compare.compare(src, dest) === CompareResult(List.empty, List.empty, Set.empty))
   }
 
   test("Compare directories where src has a new file") {
@@ -65,7 +65,7 @@ class CompareTest extends FunSuite with MockitoSugar {
       ))
     ))
 
-    assert(Compare.compare(src, dest) === CompareResult(Set(FileDetails("/b/c/e.txt",1)), Set.empty, Set.empty))
+    assert(Compare.compare(src, dest) === CompareResult(List(FileDetails("/b/c/e.txt",1)), List.empty, Set.empty))
   }
 
   test("Compare directories where dest has a new file") {
@@ -86,7 +86,7 @@ class CompareTest extends FunSuite with MockitoSugar {
       ))
     ))
 
-    assert(Compare.compare(src, dest) === CompareResult(Set.empty, Set(FileDetails("/b/c/e.txt",1)), Set.empty))
+    assert(Compare.compare(src, dest) === CompareResult(List.empty, List(FileDetails("/b/c/e.txt",1)), Set.empty))
   }
 
   test("Compare directories where src has updated file") {
@@ -106,7 +106,7 @@ class CompareTest extends FunSuite with MockitoSugar {
       ))
     ))
 
-    assert(Compare.compare(src, dest) === CompareResult(Set.empty, Set.empty, Set(UpdatedFileDetails("/b/c/d.txt",2,1))))
+    assert(Compare.compare(src, dest) === CompareResult(List.empty, List.empty, Set(UpdatedFileDetails("/b/c/d.txt",2,1))))
   }
 
   test("Compare directories where dest has updated file") {
@@ -126,7 +126,7 @@ class CompareTest extends FunSuite with MockitoSugar {
       ))
     ))
 
-    assert(Compare.compare(src, dest) === CompareResult(Set.empty, Set.empty, Set(UpdatedFileDetails("/b/c/d.txt",1,2))))
+    assert(Compare.compare(src, dest) === CompareResult(List.empty, List.empty, Set(UpdatedFileDetails("/b/c/d.txt",1,2))))
   }
 
   test("Compare directories where both src and dest have new files") {
@@ -146,7 +146,7 @@ class CompareTest extends FunSuite with MockitoSugar {
       ))
     ))
 
-    assert(Compare.compare(src, dest) === CompareResult(Set(FileDetails("/b/c/d.txt",1)), Set(FileDetails("/b/c/e.txt",2)), Set.empty))
+    assert(Compare.compare(src, dest) === CompareResult(List(FileDetails("/b/c/d.txt",1)), List(FileDetails("/b/c/e.txt",2)), Set.empty))
   }
 
   test("Compare directories where both src and dest have new files and src an updated file") {
@@ -170,7 +170,7 @@ class CompareTest extends FunSuite with MockitoSugar {
       ))
     ))
 
-    assert(Compare.compare(src, dest) === CompareResult(Set(FileDetails("/b/c/d.txt",1)), Set(FileDetails("/b/c/e.txt",2)), Set(UpdatedFileDetails("/b/c/f.txt",4,3))))
+    assert(Compare.compare(src, dest) === CompareResult(List(FileDetails("/b/c/d.txt",1)), List(FileDetails("/b/c/e.txt",2)), Set(UpdatedFileDetails("/b/c/f.txt",4,3))))
   }
 
   test("Compare directories where both src and dest have new files and dest an updated file") {
@@ -194,6 +194,6 @@ class CompareTest extends FunSuite with MockitoSugar {
       ))
     ))
 
-    assert(Compare.compare(src, dest) === CompareResult(Set(FileDetails("/b/c/d.txt",1)), Set(FileDetails("/b/c/e.txt",2)), Set(UpdatedFileDetails("/b/c/f.txt",3,4))))
+    assert(Compare.compare(src, dest) === CompareResult(List(FileDetails("/b/c/d.txt",1)), List(FileDetails("/b/c/e.txt",2)), Set(UpdatedFileDetails("/b/c/f.txt",3,4))))
   }
 }

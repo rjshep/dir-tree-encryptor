@@ -15,7 +15,8 @@ case class FileDetails(path: String, timestamp: Long) {
 }
 
 case class UpdatedFileDetails(path: String, srcTimestamp: Long, destTimestamp: Long)
-case class CompareResult(newSrc: Set[FileDetails], newDest: Set[FileDetails], updated: Set[UpdatedFileDetails]) {
+
+case class CompareResult(newSrc: Seq[FileDetails], newDest: Seq[FileDetails], updated: Set[UpdatedFileDetails]) {
   override def toString: String = {
     val sb = new StringBuilder()
     sb ++= "New src:\n"
@@ -30,6 +31,8 @@ case class CompareResult(newSrc: Set[FileDetails], newDest: Set[FileDetails], up
 
 object Compare {
 
+  private def fileDetailsSorter(x: FileDetails, y:FileDetails) = x.path < y.path
+
   def compare(src: File, dest: File):CompareResult = {
     val srcSet = scan(src).map(f=>FileDetails(f.getAbsolutePath.substring(src.getAbsolutePath.length), f.lastModified())).toSet
     val destSet = scan(dest).map(f=>FileDetails(f.getAbsolutePath.substring(dest.getAbsolutePath.length), f.lastModified())).toSet
@@ -42,11 +45,11 @@ object Compare {
     val srcPaths = src.map(_.path)
     val destPaths = dest.map(_.path)
 
-    val newSrcFiles=src.filterNot(x=> destPaths.contains(x.path))
-    val newDestFiles=dest.filterNot(x=> srcPaths.contains(x.path))
+    val newSrcFiles=src.filterNot(x=> destPaths.contains(x.path)).toList.sortWith(fileDetailsSorter)
+    val newDestFiles=dest.filterNot(x=> srcPaths.contains(x.path)).toList.sortWith(fileDetailsSorter)
 
-    val changedSrcFiles=src.filter(x=> destPaths.contains(x.path)).toList.sortWith((x,y)=> x.path < y.path)
-    val changedDestFiles=dest.filter(x=> srcPaths.contains(x.path)).toList.sortWith((x,y)=> x.path < y.path)
+    val changedSrcFiles=src.filter(x=> destPaths.contains(x.path)).toList.sortWith(fileDetailsSorter)
+    val changedDestFiles=dest.filter(x=> srcPaths.contains(x.path)).toList.sortWith(fileDetailsSorter)
 
     val changedFiles = changedSrcFiles.zip(changedDestFiles) flatMap {
       x=>

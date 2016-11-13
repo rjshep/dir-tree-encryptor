@@ -24,7 +24,7 @@ case class Context(pubKeyRingList: List[PGPPublicKeyRing], factory: PGPObjectFac
 object PGP {
 
   def publicKeyringsFromCollection(file: String, userId: Option[String] = None): List[PGPPublicKeyRing] = {
-    publicKeyringsFromCollection(new FileInputStream(file), None)
+    publicKeyringsFromCollection(new FileInputStream(file), userId)
   }
 
   def publicKeyringsFromCollection(in: InputStream, userId: Option[String]): List[PGPPublicKeyRing] = {
@@ -49,7 +49,7 @@ object PGP {
     it.toList
   }
 
-  def decrypt(encStream: InputStream, clearStream: OutputStream, pubKeyRingList: List[PGPPublicKeyRing], secKeyRing: PGPSecretKeyRing, pass: String, checkSig: Boolean = false): Try[Unit] = {
+  def decrypt(encStream: InputStream, clearStream: OutputStream, pubKeyRingList: List[PGPPublicKeyRing], secKeyRing: PGPSecretKeyRing, pass: String): Try[Unit] = {
     try {
 
       val edo = getEncryptedDataObject(encStream)
@@ -70,7 +70,9 @@ object PGP {
       Success(Unit)
     }
     catch {
-      case t: Throwable => Failure(t)
+      case t: Throwable =>
+        t.printStackTrace
+        Failure(t)
     }
   }
 
@@ -94,14 +96,17 @@ object PGP {
 
     val finalOut = new PGPLiteralDataGenerator().open(compressedOut, PGPLiteralData.BINARY, "", new Date(), new Array[Byte](4096))
 
-    val bytes = new Array[Byte](4096)
-    Iterator
-      .continually(clearStream.read(bytes))
-      .takeWhile(-1 !=)
-      .foreach(read => {
-        finalOut.write(bytes, 0, read)
-        signatureGenerator.update(bytes, 0, read)
-      })
+    def processStream: Unit = {
+      val bytes = new Array[Byte](4096)
+      Iterator
+        .continually(clearStream.read(bytes))
+        .takeWhile(-1 !=)
+        .foreach(read => {
+          finalOut.write(bytes, 0, read)
+          signatureGenerator.update(bytes, 0, read)
+        })
+    }
+    processStream
 
     finalOut.close()
     clearStream.close()
