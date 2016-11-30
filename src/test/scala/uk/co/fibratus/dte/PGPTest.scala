@@ -14,7 +14,7 @@ import scala.util.{Failure, Success}
   */
 class PGPTest extends FunSuite with BeforeAndAfterAll {
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     Security.addProvider(new BouncyCastleProvider())
   }
 
@@ -49,7 +49,7 @@ class PGPTest extends FunSuite with BeforeAndAfterAll {
     val out = new ByteArrayOutputStream()
     val secKey = PGP.secretKeyringsFromCollection(this.getClass.getResourceAsStream("/keys/secring2.gpg"), Some("DTE Test User 2 <dte2@local>"))
     val pubKeyRingList = PGP.publicKeyringsFromCollection(this.getClass.getResourceAsStream("/keys/pubring.gpg"), None)
-    PGP.decrypt(this.getClass.getResourceAsStream("/files/testfile.txt.gpg"), out, pubKeyRingList, secKey.head, "passwd")
+    PGP.decrypt(this.getClass.getResourceAsStream("/files/testfile.txt.gpg"), out, pubKeyRingList, secKey.head, "passwd".toCharArray)
     assert(out.toString === "testfile.txt contents\n")
   }
 
@@ -57,7 +57,7 @@ class PGPTest extends FunSuite with BeforeAndAfterAll {
     val out = new ByteArrayOutputStream()
     val secKey = PGP.secretKeyringsFromCollection(this.getClass.getResourceAsStream("/keys/secring2.gpg"), Some("DTE Test User 2 <dte2@local>"))
     val pubKeyRingList = PGP.publicKeyringsFromCollection(this.getClass.getResourceAsStream("/keys/pubring.gpg"), None)
-    val d = PGP.decrypt(this.getClass.getResourceAsStream("/files/testfile.txt.gpg"), out, pubKeyRingList, secKey.head, "notthepasswd")
+    val d = PGP.decrypt(this.getClass.getResourceAsStream("/files/testfile.txt.gpg"), out, pubKeyRingList, secKey.head, "notthepasswd".toCharArray)
     assert(d.isFailure)
     d match {
       case Failure(f) =>
@@ -72,7 +72,7 @@ class PGPTest extends FunSuite with BeforeAndAfterAll {
     val secKey = PGP.secretKeyringsFromCollection(this.getClass.getResourceAsStream("/keys/secring2.gpg"), Some("DTE Test User 2 <dte2@local>"))
     val pubKeyRingList = PGP.publicKeyringsFromCollection(this.getClass.getResourceAsStream("/keys/pubring2.gpg"), None)
 
-    val d = PGP.decrypt(this.getClass.getResourceAsStream("/files/testfile.txt.gpg"), out, pubKeyRingList, secKey.head, "passwd")
+    val d = PGP.decrypt(this.getClass.getResourceAsStream("/files/testfile.txt.gpg"), out, pubKeyRingList, secKey.head, "passwd".toCharArray)
     assert(d.isFailure)
     d match {
       case Failure(f) =>
@@ -90,13 +90,13 @@ class PGPTest extends FunSuite with BeforeAndAfterAll {
     val secKeyRing = PGP.secretKeyringsFromCollection(this.getClass.getResourceAsStream("/keys/secring2.gpg"), Some("DTE Test User 2 <dte2@local>"))
     val pubKeyRingList = PGP.publicKeyringsFromCollection(this.getClass.getResourceAsStream("/keys/pubring.gpg"), Some("DTE Test User 1 <dte1@local>"))
 
-    PGP.encrypt(in, out, pubKeyRingList, secKeyRing.head, "passwd")
+    PGP.encrypt(in, out, pubKeyRingList, secKeyRing.head, "passwd".toCharArray)
 
     val decin = new ByteArrayInputStream(out.toByteArray)
     val decout = new ByteArrayOutputStream()
     val decsecKey = PGP.secretKeyringsFromCollection(this.getClass.getResourceAsStream("/keys/secring.gpg"), Some("DTE Test User 1 <dte1@local>"))
     val decpubKeyRingList = PGP.publicKeyringsFromCollection(this.getClass.getResourceAsStream("/keys/pubring2.gpg"), None)
-    PGP.decrypt(decin, decout, decpubKeyRingList, decsecKey.head, "passwd")
+    PGP.decrypt(decin, decout, decpubKeyRingList, decsecKey.head, "passwd".toCharArray)
     assert(decout.toString === msg)
     println(decout.toString)
   }

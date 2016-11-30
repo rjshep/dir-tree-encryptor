@@ -49,7 +49,11 @@ object PGP {
     it.toList
   }
 
-  def decrypt(encStream: InputStream, clearStream: OutputStream, pubKeyRingList: List[PGPPublicKeyRing], secKeyRing: PGPSecretKeyRing, pass: String): Try[Unit] = {
+  def decrypt(encFile: File, clearFile: File, pubKeyRingList: List[PGPPublicKeyRing], secKeyRing: PGPSecretKeyRing, pass: Array[Char]): Unit = {
+    encrypt(new FileInputStream(encFile), new FileOutputStream(clearFile), pubKeyRingList, secKeyRing, pass)
+  }
+
+  def decrypt(encStream: InputStream, clearStream: OutputStream, pubKeyRingList: List[PGPPublicKeyRing], secKeyRing: PGPSecretKeyRing, pass: Array[Char]): Try[Unit] = {
     try {
 
       val edo = getEncryptedDataObject(encStream)
@@ -59,7 +63,7 @@ object PGP {
       if (secKey == null)
         throw new PGPException("File was not encrypted to the public key associated with the supplied private key")
 
-      val privKey = secKey.extractPrivateKey(new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(pass.toCharArray))
+      val privKey = secKey.extractPrivateKey(new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(pass))
 
       val clear = edo.getDataStream(new BcPublicKeyDataDecryptorFactory(privKey))
 
@@ -71,12 +75,15 @@ object PGP {
     }
     catch {
       case t: Throwable =>
-        t.printStackTrace
         Failure(t)
     }
   }
 
-  def encrypt(clearStream: InputStream, encStream: OutputStream, pubKeyRingList: List[PGPPublicKeyRing], secKeyRing: PGPSecretKeyRing, pass: String) = {
+  def encrypt(clearFile: File, encFile: File, pubKeyRingList: List[PGPPublicKeyRing], secKeyRing: PGPSecretKeyRing, pass: Array[Char]):Unit = {
+    encrypt(new FileInputStream(clearFile), new FileOutputStream(encFile), pubKeyRingList, secKeyRing, pass)
+  }
+
+  def encrypt(clearStream: InputStream, encStream: OutputStream, pubKeyRingList: List[PGPPublicKeyRing], secKeyRing: PGPSecretKeyRing, pass: Array[Char]):Unit = {
     val publicKey = pubKeyRingList.head.getPublicKey
 
     val rand = new SecureRandom()
@@ -89,14 +96,14 @@ object PGP {
 
     val signatureGenerator = new PGPSignatureGenerator(new BcPGPContentSignerBuilder(publicKey.getAlgorithm, HashAlgorithmTags.SHA512))
 
-    val privKey = secKeyRing.getSecretKey.extractPrivateKey(new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(pass.toCharArray))
+    val privKey = secKeyRing.getSecretKey.extractPrivateKey(new BcPBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider()).build(pass))
 
     signatureGenerator.init(PGPSignature.BINARY_DOCUMENT, privKey)
     signatureGenerator.generateOnePassVersion(true).encode(compressedOut)
 
     val finalOut = new PGPLiteralDataGenerator().open(compressedOut, PGPLiteralData.BINARY, "", new Date(), new Array[Byte](4096))
 
-    def processStream: Unit = {
+    def processStream() = {
       val bytes = new Array[Byte](4096)
       Iterator
         .continually(clearStream.read(bytes))
@@ -106,7 +113,7 @@ object PGP {
           signatureGenerator.update(bytes, 0, read)
         })
     }
-    processStream
+    processStream()
 
     finalOut.close()
     clearStream.close()
