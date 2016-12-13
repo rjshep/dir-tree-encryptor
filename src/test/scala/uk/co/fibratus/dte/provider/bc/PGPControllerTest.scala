@@ -1,4 +1,4 @@
-package uk.co.fibratus.dte
+package uk.co.fibratus.dte.provider.bc
 
 import java.io.File
 
@@ -10,7 +10,7 @@ import org.scalatest.mockito.MockitoSugar
 /**
   * Created by rjs on 15/11/2016.
   */
-class ControllerTest extends FunSuite with MockitoSugar {
+class PGPControllerTest extends FunSuite with MockitoSugar {
 
   def dummyOp(i: File, o: File, p: List[PGPPublicKeyRing], s: PGPSecretKeyRing, w: Array[Char]): Unit = {}
 
@@ -26,7 +26,7 @@ class ControllerTest extends FunSuite with MockitoSugar {
 
     val context = PGPContext(List.empty, List[PGPSecretKeyRing](mock[PGPSecretKeyRing]), "", "".toCharArray)
 
-    Controller.doCore(inputFile, outputFile, context, dummyOp)
+    PGPController.doCore(inputFile, outputFile, context, dummyOp)
 
     verify(inputFile).getParentFile
     verify(inputFile, times(1)).lastModified

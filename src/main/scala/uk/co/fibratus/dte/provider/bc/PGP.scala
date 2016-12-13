@@ -1,4 +1,4 @@
-package uk.co.fibratus.dte
+package uk.co.fibratus.dte.provider.bc
 
 import java.io._
 import java.security.SecureRandom

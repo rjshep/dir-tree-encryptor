@@ -1,6 +1,6 @@
-package uk.co.fibratus.dte
+package uk.co.fibratus.dte.provider.bc
 
-import java.io.{BufferedInputStream, ByteArrayInputStream, ByteArrayOutputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.security.Security
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider
