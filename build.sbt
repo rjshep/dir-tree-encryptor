@@ -19,3 +19,5 @@ scalacOptions += "-deprecation"
 scalacOptions += "-feature"
 
 oneJarSettings
+
+mainClass in oneJar := Some("uk.co.fibratus.dte.Main")
