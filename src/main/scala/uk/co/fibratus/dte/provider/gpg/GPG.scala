@@ -34,9 +34,7 @@ object GPG {
   def keyForRecipients(recipients: Seq[String]): Array[GnuPGKey] = {
     val keys: Seq[GnuPGKey] = recipients.flatMap {
       r =>
-        val x=ctx.searchKeys(r)
-        println(r+ " "+x.length)
-        x
+        ctx.searchKeys(r)
     }
     keys.toArray
   }
