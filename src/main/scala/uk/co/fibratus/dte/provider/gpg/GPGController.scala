@@ -34,7 +34,7 @@ object GPGController {
 
   def doCore(inputFile: File, outputFile: File, context: GPGContext,
              f: (File, File, Array[GnuPGKey]) => Unit): Boolean = {
-    inputFile.getParentFile.mkdirs
+    outputFile.getParentFile.mkdirs
 
     f(
       inputFile,

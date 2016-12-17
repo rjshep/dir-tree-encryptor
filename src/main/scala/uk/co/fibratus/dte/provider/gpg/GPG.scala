@@ -1,6 +1,6 @@
 package uk.co.fibratus.dte.provider.gpg
 
-import java.io.{File, FileOutputStream}
+import java.io.{File, FileInputStream, FileOutputStream}
 
 import com.freiheit.gnupg.{GnuPGContext, GnuPGKey}
 
@@ -11,9 +11,10 @@ object GPG {
   val ctx = new GnuPGContext
 
   def encrypt(clearFile: File, encFile: File, recipients: Array[GnuPGKey]): Unit = {
-    val clear = ctx.createDataObject(clearFile)
+    val clear = ctx.createDataObject()
     val enc = ctx.createDataObject()
 
+    clear.read(new FileInputStream(clearFile))
     ctx.encryptAndSign(recipients, clear, enc)
 
     val fos = new FileOutputStream(encFile)
@@ -22,8 +23,10 @@ object GPG {
   }
 
   def decrypt(encFile: File, clearFile: File, recipients: Array[GnuPGKey]): Unit = {
-    val enc = ctx.createDataObject(encFile)
+    val enc = ctx.createDataObject()
     val clear = ctx.createDataObject()
+
+    enc.read(new FileInputStream(encFile))
     ctx.decryptVerify(enc, clear)
 
     val fos = new FileOutputStream(clearFile)

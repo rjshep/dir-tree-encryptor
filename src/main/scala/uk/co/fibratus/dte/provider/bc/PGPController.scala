@@ -38,7 +38,7 @@ object PGPController {
 
   def doCore(inputFile: File, outputFile: File, context: PGPContext,
              f: (File, File, List[PGPPublicKeyRing], PGPSecretKeyRing, Array[Char]) => Unit): Boolean = {
-    inputFile.getParentFile.mkdirs
+    outputFile.getParentFile.mkdirs
 
     f(
       inputFile,
