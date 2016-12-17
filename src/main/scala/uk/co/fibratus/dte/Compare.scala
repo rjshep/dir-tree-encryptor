@@ -66,10 +66,8 @@ object Compare {
       files match {
         case Nil => acc
         case x :: xs =>
-          x.isDirectory match {
-            case false => sc(x :: acc, xs)
-            case true => sc(acc, xs ::: x.listFiles.toList)
-          }
+          if(x.isDirectory) sc(acc, xs ::: x.listFiles.toList.filterNot(_.getName == ".DS_Store"))
+          else sc(x :: acc, xs)
       }
     }
 

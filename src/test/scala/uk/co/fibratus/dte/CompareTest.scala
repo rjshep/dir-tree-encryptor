@@ -24,6 +24,7 @@ class CompareTest extends FunSuite with MockitoSugar {
     when(f.getAbsolutePath).thenReturn(path+name)
     when(f.isDirectory).thenReturn(false)
     when(f.lastModified).thenReturn(lastModified)
+    when(f.getName).thenReturn(name)
     f
   }
 
@@ -40,6 +41,48 @@ class CompareTest extends FunSuite with MockitoSugar {
       folder("/a/", "b", List(
         folder("/a/b/", "c", List(
           leafFile("/a/b/c/", "d.txt", 1)
+        ))
+      ))
+    ))
+
+    assert(Compare.compare(src, dest) === CompareResult(List.empty, List.empty, Set.empty))
+  }
+
+  test("Compare directories and ignore .DS_Store in src") {
+    val src = folder("/z/q/w/e/r/", "a", List(
+      folder("/z/q/w/e/r/a/", "b", List(
+        folder("/z/q/w/e/r/a/b/", "c", List(
+          leafFile("/z/q/w/e/r/a/b/c/", "d.txt", 1),
+          leafFile("/z/q/w/e/r/a/b/c/", ".DS_Store", 1)
+        ))
+      ))
+    ))
+
+    val dest = folder("/", "a", List(
+      folder("/a/", "b", List(
+        folder("/a/b/", "c", List(
+          leafFile("/a/b/c/", "d.txt", 1)
+        ))
+      ))
+    ))
+
+    assert(Compare.compare(src, dest) === CompareResult(List.empty, List.empty, Set.empty))
+  }
+
+  test("Compare directories and ignore .DS_Store in dest") {
+    val src = folder("/z/q/w/e/r/", "a", List(
+      folder("/z/q/w/e/r/a/", "b", List(
+        folder("/z/q/w/e/r/a/b/", "c", List(
+          leafFile("/z/q/w/e/r/a/b/c/", "d.txt", 1)
+        ))
+      ))
+    ))
+
+    val dest = folder("/", "a", List(
+      folder("/a/", "b", List(
+        folder("/a/b/", "c", List(
+          leafFile("/a/b/c/", "d.txt", 1),
+          leafFile("/z/q/w/e/r/a/b/c/", ".DS_Store", 1)
         ))
       ))
     ))
