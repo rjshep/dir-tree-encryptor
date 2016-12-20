@@ -22,6 +22,9 @@ trait Controller {
     val destDirName = config("destDir")
     val verbose = config("verbose").equals("true")
     val noop = config("noop").equals("true")
+    val client = config("clientId")
+    val syncState = new SyncState(client, destDirName)
+    val syncTimestamp = syncState.timestamp
 
     val r = Compare.compare(new File(srcDirName), new File(destDirName))
 
@@ -36,15 +39,29 @@ trait Controller {
     r.newSrc foreach {
       f =>
         val src = srcFileFromFileDetails(f)
-        if (verbose) logger.info(s"Encrypting new file: ${src.getAbsolutePath}")
-        if (!noop) doEncrypt(src, destFileFromFileDetails(f))
+        if (!noop) {
+          if(syncTimestamp.isDefined && f.timestamp < syncTimestamp.get) {
+            if(verbose) logger.info(s"Deleting: ${src.getAbsolutePath}")
+            src.delete()
+          } else {
+            if (verbose) logger.info(s"Encrypting new file: ${src.getAbsolutePath}")
+            doEncrypt(src, destFileFromFileDetails(f))
+          }
+        }
     }
 
     r.newDest foreach {
       f =>
         val dest = destFileFromFileDetails(f)
-        if (verbose) logger.info(s"Decrypting new file: ${dest.getAbsolutePath}")
-        if (!noop) doDecrypt(dest, srcFileFromFileDetails(f))
+        if (!noop) {
+          if(syncTimestamp.isDefined && f.timestamp < syncTimestamp.get) {
+            if(verbose) logger.info(s"Deleting: ${dest.getAbsolutePath}")
+            dest.delete()
+          } else {
+            if (verbose) logger.info(s"Decrypting new file: ${dest.getAbsolutePath}")
+            doDecrypt(dest, srcFileFromFileDetails(f))
+          }
+        }
     }
 
     r.updated foreach {
@@ -59,6 +76,8 @@ trait Controller {
           if (!noop) doDecrypt(dest, srcFileFromPath(f.path))
         }
     }
+
+    syncState.update()
   }
 }
 

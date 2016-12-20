@@ -7,12 +7,7 @@ import java.util.Date
   * Created by rjs on 05/11/2016.
   */
 
-case class FileDetails(path: String, timestamp: Long) {
-//  override def equals(o: Any) = o match {
-//    case that: FileDetails => that.path.equalsIgnoreCase(this.path)
-//    case _ => false
-//  }
-}
+case class FileDetails(path: String, timestamp: Long)
 
 case class UpdatedFileDetails(path: String, srcTimestamp: Long, destTimestamp: Long)
 
@@ -59,18 +54,19 @@ object Compare {
     CompareResult(newSrcFiles, newDestFiles, changedFiles.toSet)
   }
 
-
   private def scan(file: File): List[File] = {
     @scala.annotation.tailrec
     def sc(acc: List[File], files: List[File]): List[File] = {
       files match {
         case Nil => acc
         case x :: xs =>
-          if(x.isDirectory) sc(acc, xs ::: x.listFiles.toList.filterNot(_.getName == ".DS_Store"))
+          if(x.isDirectory) sc(acc, xs ::: x.listFiles.toList.filterNot(f => ignoreList.contains(f.getName)))
           else sc(x :: acc, xs)
       }
     }
 
     sc(List(), List(file))
   }
+
+  private val ignoreList=List(".DS_Store", ".syncstate")
 }
