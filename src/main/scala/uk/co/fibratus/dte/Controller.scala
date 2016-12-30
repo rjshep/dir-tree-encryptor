@@ -36,18 +36,24 @@ trait Controller {
 
     def destFileFromFileDetails(fileDetails: FileDetails): File = destFileFromPath(fileDetails.path)
 
+    def delete(file: File) = if(!noop) file.delete()
+
+    def encrypt(inputFile: File, outputFile: File) = if(!noop) doEncrypt(inputFile, outputFile)
+
+    def decrypt(inputFile: File, outputFile: File) = if(!noop) doDecrypt(inputFile, outputFile)
+
+    def log(msg: String) = if(verbose) logger.info(msg)
+
     r.newSrc foreach {
       f =>
         val src = srcFileFromFileDetails(f)
-        if (!noop) {
           if(syncTimestamp.isDefined && f.timestamp < syncTimestamp.get) {
-            if(verbose) logger.info(s"Deleting: ${src.getAbsolutePath}")
-            src.delete()
+            log(s"Deleting: ${src.getAbsolutePath}")
+            delete(src)
           } else {
-            if (verbose) logger.info(s"Encrypting new file: ${src.getAbsolutePath}")
-            doEncrypt(src, destFileFromFileDetails(f))
+            log(s"Encrypting new file: ${src.getAbsolutePath}")
+            encrypt(src, destFileFromFileDetails(f))
           }
-        }
     }
 
     r.newDest foreach {
@@ -55,11 +61,11 @@ trait Controller {
         val dest = destFileFromFileDetails(f)
         if (!noop) {
           if(syncTimestamp.isDefined && f.timestamp < syncTimestamp.get) {
-            if(verbose) logger.info(s"Deleting: ${dest.getAbsolutePath}")
-            dest.delete()
+            log(s"Deleting: ${dest.getAbsolutePath}")
+            delete(dest)
           } else {
-            if (verbose) logger.info(s"Decrypting new file: ${dest.getAbsolutePath}")
-            doDecrypt(dest, srcFileFromFileDetails(f))
+            log(s"Decrypting new file: ${dest.getAbsolutePath}")
+            decrypt(dest, srcFileFromFileDetails(f))
           }
         }
     }
@@ -68,12 +74,12 @@ trait Controller {
       f =>
         if (f.srcTimestamp > f.destTimestamp) {
           val src = srcFileFromPath(f.path)
-          if (verbose) logger.info(s"Encrypting updated file: ${src.getAbsolutePath}")
-          if (!noop) doEncrypt(src, destFileFromPath(f.path))
+          log(s"Encrypting updated file: ${src.getAbsolutePath}")
+          encrypt(src, destFileFromPath(f.path))
         } else {
           val dest = destFileFromPath(f.path)
-          if (verbose) logger.info(s"Decrypting updated file: ${dest.getAbsolutePath}")
-          if (!noop) doDecrypt(dest, srcFileFromPath(f.path))
+          log(s"Decrypting updated file: ${dest.getAbsolutePath}")
+          decrypt(dest, srcFileFromPath(f.path))
         }
     }
 
