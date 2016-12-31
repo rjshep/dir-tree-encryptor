@@ -1,13 +1,15 @@
 package uk.co.fibratus.dte
 
 import java.io.File
+import java.nio.file.{Files, LinkOption}
+import java.nio.file.attribute.FileTime
 import java.util.Date
 
 /**
   * Created by rjs on 05/11/2016.
   */
 
-case class FileDetails(path: String, timestamp: Long)
+case class FileDetails(path: String, modTimestamp: Long, crTimestamp: Long)
 
 case class UpdatedFileDetails(path: String, srcTimestamp: Long, destTimestamp: Long)
 
@@ -15,9 +17,9 @@ case class CompareResult(newSrc: Seq[FileDetails], newDest: Seq[FileDetails], up
   override def toString: String = {
     val sb = new StringBuilder()
     sb ++= "New src:\n"
-    newSrc.foreach(x=>sb.append(s"\t${x.path}, ${new Date(x.timestamp)}\n"))
+    newSrc.foreach(x=>sb.append(s"\t${x.path}, ${new Date(x.modTimestamp)}\n"))
     sb ++= "\nNew dest:\n"
-    newDest.foreach(x=>sb.append(s"\t${x.path}, ${new Date(x.timestamp)}\n"))
+    newDest.foreach(x=>sb.append(s"\t${x.path}, ${new Date(x.modTimestamp)}\n"))
     sb ++= "\nUpdated:\n"
     updated.map(x=>sb.append(s"\t${x.path}, ${new Date(x.srcTimestamp)}, ${new Date(x.destTimestamp)}\n"))
     sb.toString()
@@ -29,8 +31,20 @@ object Compare {
   private def fileDetailsSorter(x: FileDetails, y:FileDetails) = x.path < y.path
 
   def compare(src: File, dest: File):CompareResult = {
-    val srcSet = scan(src).map(f=>FileDetails(f.getAbsolutePath.substring(src.getAbsolutePath.length), f.lastModified())).toSet
-    val destSet = scan(dest).map(f=>FileDetails(f.getAbsolutePath.substring(dest.getAbsolutePath.length), f.lastModified())).toSet
+    val srcSet = scan(src).map(
+      f=>FileDetails(
+        f.getAbsolutePath.substring(src.getAbsolutePath.length),
+        f.lastModified(),
+        Files.getAttribute(f.toPath, "basic:creationTime", LinkOption.NOFOLLOW_LINKS).asInstanceOf[FileTime].toMillis
+      )
+    ).toSet
+    val destSet = scan(dest).map(
+      f=>FileDetails(
+        f.getAbsolutePath.substring(dest.getAbsolutePath.length),
+        f.lastModified(),
+        Files.getAttribute(f.toPath, "basic:creationTime", LinkOption.NOFOLLOW_LINKS).asInstanceOf[FileTime].toMillis
+      )
+    ).toSet
 
     compare(srcSet, destSet)
   }
@@ -48,7 +62,7 @@ object Compare {
 
     val changedFiles = changedSrcFiles.zip(changedDestFiles) flatMap {
       x=>
-        if(x._1.timestamp!=x._2.timestamp) Some(UpdatedFileDetails(x._1.path, x._1.timestamp, x._2.timestamp)) else None
+        if(x._1.modTimestamp!=x._2.modTimestamp) Some(UpdatedFileDetails(x._1.path, x._1.modTimestamp, x._2.modTimestamp)) else None
     }
 
     CompareResult(newSrcFiles, newDestFiles, changedFiles.toSet)

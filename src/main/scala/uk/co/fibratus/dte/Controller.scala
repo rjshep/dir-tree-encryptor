@@ -47,7 +47,7 @@ trait Controller {
     r.newSrc foreach {
       f =>
         val src = srcFileFromFileDetails(f)
-          if(syncTimestamp.isDefined && f.timestamp < syncTimestamp.get) {
+          if(syncTimestamp.isDefined && f.crTimestamp > syncTimestamp.get) {
             log(s"Deleting: ${src.getAbsolutePath}")
             delete(src)
           } else {
@@ -59,15 +59,13 @@ trait Controller {
     r.newDest foreach {
       f =>
         val dest = destFileFromFileDetails(f)
-        if (!noop) {
-          if(syncTimestamp.isDefined && f.timestamp < syncTimestamp.get) {
+          if(syncTimestamp.isDefined && f.modTimestamp < syncTimestamp.get) {
             log(s"Deleting: ${dest.getAbsolutePath}")
             delete(dest)
           } else {
             log(s"Decrypting new file: ${dest.getAbsolutePath}")
             decrypt(dest, srcFileFromFileDetails(f))
           }
-        }
     }
 
     r.updated foreach {

@@ -18,17 +18,18 @@ class PGPControllerTest extends FunSuite with MockitoSugar {
     val inputFile = mock[File]
     val parentFile = mock[File]
     when(parentFile.mkdirs).thenReturn(true)
-    when(inputFile.getParentFile).thenReturn(parentFile)
     when(inputFile.lastModified).thenReturn(1)
 
     val outputFile = mock[File]
     when(outputFile.setLastModified(1)).thenReturn(true)
+    when(outputFile.getParentFile).thenReturn(parentFile)
 
     val context = PGPContext(List.empty, List[PGPSecretKeyRing](mock[PGPSecretKeyRing]), "", "".toCharArray)
 
     PGPController.doCore(inputFile, outputFile, context, dummyOp)
 
-    verify(inputFile).getParentFile
+    verify(outputFile).getParentFile
+    verify(parentFile).mkdirs
     verify(inputFile, times(1)).lastModified
     verify(outputFile, times(1)).setLastModified(1)
   }
