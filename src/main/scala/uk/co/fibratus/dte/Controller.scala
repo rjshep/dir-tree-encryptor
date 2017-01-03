@@ -1,6 +1,7 @@
 package uk.co.fibratus.dte
 
 import java.io._
+import java.util.Date
 
 import com.typesafe.scalalogging.Logger
 
@@ -47,12 +48,15 @@ trait Controller {
     r.newSrc foreach {
       f =>
         val src = srcFileFromFileDetails(f)
-          if(syncTimestamp.isDefined && f.crTimestamp > syncTimestamp.get) {
-            log(s"Deleting: ${src.getAbsolutePath}")
-            delete(src)
-          } else {
+          if(syncTimestamp.isDefined &&
+            (f.crTimestamp > syncTimestamp.get ||
+              f.modTimestamp > syncTimestamp.get)
+          ) {
             log(s"Encrypting new file: ${src.getAbsolutePath}")
             encrypt(src, destFileFromFileDetails(f))
+          } else {
+            log(s"Deleting: [${new Date(syncTimestamp.get)}] [${new Date(f.crTimestamp)}] [${new Date(f.modTimestamp)}] ${src.getAbsolutePath}")
+            delete(src)
           }
     }
 
@@ -81,7 +85,7 @@ trait Controller {
         }
     }
 
-    syncState.update()
+    if(!noop) syncState.update()
   }
 }
 
